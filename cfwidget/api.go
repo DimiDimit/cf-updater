@@ -30,9 +30,9 @@ type ModInfo struct {
 	}
 	Thumbnail   string
 	Categories  []string
-	CreatedAt   time.Time `json:"created_at,string"`
+	CreatedAt   time.Time `json:"created_at"`
 	Description string
-	LastFetch   time.Time `json:"last_fetch,string"`
+	LastFetch   time.Time `json:"last_fetch"`
 	Download    File
 }
 
@@ -47,7 +47,7 @@ type File struct {
 	FileSize   int
 	Versions   []string
 	Downloads  int
-	UploadedAt time.Time `json:"uploaded_at,string"`
+	UploadedAt time.Time `json:"uploaded_at"`
 }
 
 // GetModInfo returns the info for a mod by its URL.

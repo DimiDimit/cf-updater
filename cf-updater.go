@@ -41,7 +41,7 @@ func run() error {
 			return err
 		}
 		downloads[info.Download.ActualName()] = info
-		bar.Add(1)
+		_ = bar.Add(1)
 	}
 
 	fmt.Println("🗑 Deleting old mods...")
@@ -53,7 +53,6 @@ func run() error {
 	remaining := make(map[string]struct{})
 	for _, file := range files {
 		kept, err := func() (kept bool, err error) {
-			defer bar.Add(1)
 			kept = true
 			if _, ok := downloads[file]; ok {
 				return
@@ -75,13 +74,13 @@ func run() error {
 		} else if kept {
 			remaining[file] = empty
 		}
+		_ = bar.Add(1)
 	}
 
 	fmt.Println("⟳ Synchronizing mods...")
 	bar = progressbar.Default(int64(len(downloads)))
 	for name, info := range downloads {
 		if err := func() error {
-			defer bar.Add(1)
 			if _, ok := remaining[name]; ok {
 				fmt.Println("→", info.Title, "is up to date.")
 				return nil
@@ -95,6 +94,7 @@ func run() error {
 		}(); err != nil {
 			return err
 		}
+		_ = bar.Add(1)
 	}
 
 	return nil
