@@ -10,7 +10,8 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: "^1.14.5"
-      - run: go test ./...
+      - name: Test
+        run: go test ./...
 
   lint:
     runs-on: ubuntu-latest

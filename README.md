@@ -10,7 +10,7 @@ A tool to update [CurseForge](https://www.curseforge.com) mods, written in [Go](
 
 ### Installing on Windows
 
-To install it on Windows, download it from the [Releases](https://www.github.com/DimitrodAM/cf-updater/releases) page and save it into your mods folder (e.g. for Minecraft it's `.minecraft/mods` or `.minecraft/mods/<version>`). You should also **download the `.cmd` file** from there.
+To install it on Windows, download it from the [Releases](https://www.github.com/DimitrodAM/cf-updater/releases) page and save it into your mods folder (e.g. for Minecraft it's `.minecraft/mods` or `.minecraft/mods/<version>`).
 
 ### Installing with `go get`
 
@@ -70,7 +70,7 @@ As stated above, **mods that aren't specified or `exclude`d will be deleted**!
 
 Now that the preparations are complete, simply run `cf-updater` in a terminal in the mods folder or double-click the executable. For more usage options, run `cf-updater -h`.
 
-If you want to use an option every time without having to open a terminal on Windows, you should edit the `.cmd` file you downloaded from the Releases page and add it there. On Linux, you should create a shell script.
+If you want to use an option every time without having to open a terminal on Windows, you should create a `.cmd` file. On Linux, you should create a shell script.
 
 **Unfortunately, CurseForge uses CloudFlare protection, which means that mods cannot be downloaded automatically, and the program will instead attempt to download them with your default browser.** You should check that they are getting downloaded to the right directory or move them manually afterwards. We have tried all sorts of ways to circumvent the CAPTCHA, but all of them were unsuccessful, and we're not sure how CFWidget does its scraping.
 
