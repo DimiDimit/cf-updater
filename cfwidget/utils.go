@@ -1,10 +1,21 @@
 package cfwidget
 
-import "strings"
+import (
+	"fmt"
+	"strings"
 
-// GetDownloadURL returns a URL to download a mod from a URL that points to the file.
-func GetDownloadURL(url string) string {
-	return strings.Replace(url, "files", "download", 1)
+	"github.com/go-resty/resty/v2"
+	"github.com/pkg/errors"
+)
+
+// DownloadURL returns a URL to a direct download of this file.
+func (file *File) DownloadURL(parentID int, client *resty.Client) (string, error) {
+	url, err := client.R().Get(fmt.Sprintf(
+		"https://addons-ecs.forgesvc.net/api/v2/addon/%v/file/%v/download-url", parentID, file.ID))
+	if err != nil {
+		return "", errors.Wrap(err, "error getting download URL for mod")
+	}
+	return string(url.Body()), nil
 }
 
 // ActualName returns the actual name of a mod, because CurseForge replaces spaces with pluses.

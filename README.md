@@ -72,10 +72,6 @@ Now that the preparations are complete, simply run `cf-updater` in a terminal in
 
 If you want to use an option every time without having to open a terminal on Windows, you should create a `.cmd` file. On Linux, you should create a shell script.
 
-**Unfortunately, CurseForge uses CloudFlare protection, which means that mods cannot be downloaded automatically, and the program will instead attempt to download them with your default browser.** You should check that they are getting downloaded to the right directory or move them manually afterwards. We have tried all sorts of ways to circumvent the CAPTCHA, but all of them were unsuccessful, and we're not sure how CFWidget does its scraping.
-
-We have noticed that the mods are actually hosted on https://media.forgecdn.net, which does **not** use CloudFlare, but we haven't found a way to get the URL without a redirect.
-
 ## Why does it delete all mods not in the mods file?
 
 That's because it's impossible to tell if you've got an older version of the mod that should be deleted or if that is just another mod. And because Forge doesn't allow multiple versions of the same mod at the same time, the old one must be deleted. So in the end, this is the only possible solution (again, suggestions are welcome!).

@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/DimitrodAM/cf-updater/cfwidget"
 	"github.com/DimitrodAM/cf-updater/modsfile"
 	"github.com/go-resty/resty/v2"
-	"github.com/pkg/browser"
 	"github.com/pkg/errors"
 	"github.com/schollz/progressbar/v3"
 )
@@ -86,7 +87,21 @@ func run() error {
 				return nil
 			}
 			fmt.Printf("⤓ Downloading %v...\n", info.Title)
-			err := browser.OpenURL(cfwidget.GetDownloadURL(info.Download.URL))
+			url, err := info.Download.DownloadURL(info.ID, client)
+			if err != nil {
+				return err
+			}
+			file, err := os.Create(info.Download.ActualName())
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+			resp, err := http.Get(url)
+			if err != nil {
+				return err
+			}
+			defer resp.Body.Close()
+			_, err = io.Copy(file, resp.Body)
 			if err != nil {
 				return err
 			}
