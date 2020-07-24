@@ -39,7 +39,7 @@ type ModInfo struct {
 	GameID        int
 	Summary       string
 	DefaultFileID int
-	DownloadCount int
+	DownloadCount float32
 	LatestFiles   []File
 	Categories    []struct {
 		CategoryID int
@@ -142,9 +142,13 @@ type File struct {
 	GameVersionFlavor          string
 }
 
+type modInfos struct {
+	ModInfos []*ModInfo
+}
+
 // GetModInfo returns the info for a mod by its ID.
 // See https://twitchappapi.docs.apiary.io/#/reference/0/get-addon-info for more information.
-func GetModInfo(client *resty.Client, modID int, gameVersion string) (*ModInfo, error) {
+func GetModInfo(client *resty.Client, modID int) (*ModInfo, error) {
 	info, err := client.R().
 		SetResult(ModInfo{}).
 		Get(fmt.Sprintf("https://%v/api/v2/addon/%v", Endpoint, modID))
@@ -152,4 +156,18 @@ func GetModInfo(client *resty.Client, modID int, gameVersion string) (*ModInfo, 
 		return nil, errors.Wrap(err, "error fetching mod info for "+string(modID))
 	}
 	return info.Result().(*ModInfo), nil
+}
+
+// GetMultipleMods returns the info for multiple mods by their IDs.
+// This is more efficient then calling GetModInfo in a loop.
+// See https://twitchappapi.docs.apiary.io/#/reference/0/get-multiple-addons for more information.
+func GetMultipleMods(client *resty.Client, modIDs []int) (*[]*ModInfo, error) {
+	info, err := client.R().
+		SetBody(modIDs).
+		SetResult(modInfos{}.ModInfos).
+		Post(fmt.Sprintf("https://%v/api/v2/addon", Endpoint))
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("error fetching mod info for %v", modIDs))
+	}
+	return info.Result().(*[]*ModInfo), nil
 }

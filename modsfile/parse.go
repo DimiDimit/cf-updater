@@ -26,7 +26,7 @@ func Parse(file io.Reader) (idsSlice []int, excls []*regexp.Regexp, version stri
 		default:
 			id, err := strconv.Atoi(line)
 			if err != nil {
-				return nil, nil, "", errors.New("unknown syntax: " + line)
+				return nil, nil, "", errors.New("invalid syntax: " + line)
 			}
 			if _, ok := ids.Get(id); ok {
 				return nil, nil, "", errors.New("duplicated ID: " + line)
