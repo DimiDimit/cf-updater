@@ -8,8 +8,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-const prefix = "https://www.curseforge.com/minecraft/mc-mods/"
-
 func compile(t *testing.T, regex string) *regexp.Regexp {
 	compiled, err := regexp.Compile(regex)
 	if err != nil {
@@ -23,15 +21,15 @@ func regexpCompare(x, y *regexp.Regexp) bool {
 }
 
 func test(t *testing.T, file string,
-	expURLs []string, expExcls []*regexp.Regexp, expVersion string, expErr bool) {
-	resURLs, resExcls, resVersion, resErr := Parse(prefix, strings.NewReader(file))
+	expIDs []int, expExcls []*regexp.Regexp, expVersion string, expErr bool) {
+	resIDs, resExcls, resVersion, resErr := Parse(strings.NewReader(file))
 	if !expErr && resErr != nil {
 		t.Errorf("Expected success, got %v", resErr)
 	} else if expErr && resErr == nil {
 		t.Error("Expected error, but got success")
 	}
-	if diff := cmp.Diff(expURLs, resURLs); diff != "" {
-		t.Errorf("URLs are different:\n%v", diff)
+	if diff := cmp.Diff(expIDs, resIDs); diff != "" {
+		t.Errorf("IDs are different:\n%v", diff)
 	}
 	if diff := cmp.Diff(expExcls, resExcls, cmp.Comparer(regexpCompare)); diff != "" {
 		t.Errorf("Exclusions are different:\n%v", diff)
@@ -41,19 +39,18 @@ func test(t *testing.T, file string,
 	}
 }
 
-func TestURLs(t *testing.T) {
+func TestIDs(t *testing.T) {
 	test(t,
 		`version 1.12.2
 
-		 https://www.curseforge.com/minecraft/mc-mods/jei
+		 # jei
+		 238222
 
-		 https://www.curseforge.com/minecraft/mc-mods/shadowfacts-forgelin
-		 https://www.curseforge.com/minecraft/mc-mods/dimitrodam-test`,
-		[]string{
-			"https://www.curseforge.com/minecraft/mc-mods/jei",
-			"https://www.curseforge.com/minecraft/mc-mods/shadowfacts-forgelin",
-			"https://www.curseforge.com/minecraft/mc-mods/dimitrodam-test",
-		}, nil, "1.12.2", false)
+		 # shadowfacts-forgelin
+		 248453
+		 # dimitrodam-test
+		 321466`,
+		[]int{238222, 248453, 321466}, nil, "1.12.2", false)
 }
 
 func TestExcludes(t *testing.T) {
@@ -68,30 +65,13 @@ func TestExcludes(t *testing.T) {
 		}, "1.12.2", false)
 }
 
-func TestShortSyntax(t *testing.T) {
+func TestNonNumeric(t *testing.T) {
 	test(t,
 		`version 1.12.2
 
-		 jei
-		 shadowfacts-forgelin
-		 dimitrodam-test`,
-		[]string{
-			"https://www.curseforge.com/minecraft/mc-mods/jei",
-			"https://www.curseforge.com/minecraft/mc-mods/shadowfacts-forgelin",
-			"https://www.curseforge.com/minecraft/mc-mods/dimitrodam-test",
-		}, nil, "1.12.2", false)
-}
-
-func TestDifferentPrefixes(t *testing.T) {
-	test(t,
-		`version 1.12.2
-
-		 https://mods.curse.com/mc-mods/minecraft/cofhcore
+		 cofhcore
 		 https://somedifferentprefix`,
-		[]string{
-			"https://mods.curse.com/mc-mods/minecraft/cofhcore",
-			"https://somedifferentprefix",
-		}, nil, "1.12.2", false)
+		nil, nil, "", true)
 }
 
 func TestComments(t *testing.T) {
@@ -123,22 +103,17 @@ func TestDuplication(t *testing.T) {
 	test(t,
 		`version 1.12.2
 
-		 https://www.curseforge.com/minecraft/mc-mods/jei
-		 https://www.curseforge.com/minecraft/mc-mods/jei`, nil, nil, "", true)
-	test(t,
-		`version 1.12.2
-
-		 https://www.curseforge.com/minecraft/mc-mods/jei
-		 jei`, nil, nil, "", true)
+		 238222
+		 238222`, nil, nil, "", true)
 }
 
 func TestVersion(t *testing.T) {
 	test(t,
-		"https://www.curseforge.com/minecraft/mc-mods/jei", nil, nil, "", true)
+		"238222", nil, nil, "", true)
 	test(t,
 		`version 1.12.2
 
-		 https://www.curseforge.com/minecraft/mc-mods/jei
+		 238222
 
 		 version 1.12.2`, nil, nil, "", true)
 }
@@ -148,29 +123,30 @@ func TestMixed(t *testing.T) {
 		`version 1.12.2
 
 		 # Not dependencies of my mod
-		 https://www.curseforge.com/minecraft/mc-mods/jei
+		 # jei
+		 238222
 
 		 # Dependencies of my mod
-		 https://www.curseforge.com/minecraft/mc-mods/shadowfacts-forgelin
-		 https://www.curseforge.com/minecraft/mc-mods/dimitrodam-test
+		 # shadowfacts-forgelin
+		 248453
+		 # dimitrodam-test
+		 321466
 		 
 		 # We want to keep OptiFine and Computronics.
 		 exclude ^OptiFine.*\.jar$
 		 exclude ^Computronics.*\.jar$
 		 
 		 # Thermal mods
-		 cofh-core
-		 cofh-world
-		 thermal-foundation
-		 thermal-expansion`,
-		[]string{
-			"https://www.curseforge.com/minecraft/mc-mods/jei",
-			"https://www.curseforge.com/minecraft/mc-mods/shadowfacts-forgelin",
-			"https://www.curseforge.com/minecraft/mc-mods/dimitrodam-test",
-			"https://www.curseforge.com/minecraft/mc-mods/cofh-core",
-			"https://www.curseforge.com/minecraft/mc-mods/cofh-world",
-			"https://www.curseforge.com/minecraft/mc-mods/thermal-foundation",
-			"https://www.curseforge.com/minecraft/mc-mods/thermal-expansion",
+		 # cofh-core
+		 69162
+		 # cofh-world
+		 271384
+		 # thermal-foundation
+		 222880
+		 # thermal-expansion
+		 69163`,
+		[]int{
+			238222, 248453, 321466, 69162, 271384, 222880, 69163,
 		}, []*regexp.Regexp{
 			compile(t, "^OptiFine.*\\.jar$"),
 			compile(t, "^Computronics.*\\.jar$"),

@@ -2,10 +2,10 @@ package modsfile
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/elliotchance/orderedmap"
@@ -14,10 +14,9 @@ import (
 
 var empty struct{}
 
-// Parse returns a slice of URLs and a slice of exclusions.
-func Parse(prefix string, file io.Reader) (
-	urlsSlice []string, excls []*regexp.Regexp, version string, err error) {
-	urls := orderedmap.NewOrderedMap()
+// Parse returns a slice of IDs and a slice of exclusions.
+func Parse(file io.Reader) (idsSlice []int, excls []*regexp.Regexp, version string, err error) {
+	ids := orderedmap.NewOrderedMap()
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
@@ -25,17 +24,14 @@ func Parse(prefix string, file io.Reader) (
 
 		switch {
 		default:
-			line = prefix + line
-			fallthrough
-
-		case strings.HasPrefix(line, "https://"):
-			if !strings.HasPrefix(line, prefix) {
-				fmt.Printf("Warning: URL doesn't start with \"%v\": \"%v\"\n", prefix, line)
+			id, err := strconv.Atoi(line)
+			if err != nil {
+				return nil, nil, "", errors.New("unknown syntax: " + line)
 			}
-			if _, ok := urls.Get(line); ok {
-				return nil, nil, "", errors.New("duplicated URL: " + line)
+			if _, ok := ids.Get(id); ok {
+				return nil, nil, "", errors.New("duplicated ID: " + line)
 			}
-			urls.Set(line, empty)
+			ids.Set(id, empty)
 
 		case strings.HasPrefix(line, "exclude "):
 			regex, err := regexp.Compile(strings.TrimSpace(strings.TrimPrefix(line, "exclude")))
@@ -63,18 +59,18 @@ func Parse(prefix string, file io.Reader) (
 		return nil, nil, "", errors.New("version statement missing")
 	}
 
-	for url := urls.Front(); url != nil; url = url.Next() {
-		urlsSlice = append(urlsSlice, url.Key.(string))
+	for id := ids.Front(); id != nil; id = id.Next() {
+		idsSlice = append(idsSlice, id.Key.(int))
 	}
 	return
 }
 
 // ParseFile opens the file called fileName and calls Parse.
-func ParseFile(prefix, fileName string) ([]string, []*regexp.Regexp, string, error) {
+func ParseFile(fileName string) ([]int, []*regexp.Regexp, string, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		return nil, nil, "", errors.Wrap(err, "error opening mods file")
 	}
 	defer file.Close()
-	return Parse(prefix, file)
+	return Parse(file)
 }

@@ -8,15 +8,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/DimitrodAM/cf-updater/cfwidget"
-	"github.com/DimitrodAM/cf-updater/modsfile"
+	"github.com/DimitrodAM/cf-updater/v2/modsfile"
+	"github.com/DimitrodAM/cf-updater/v2/twitchapi"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/schollz/progressbar/v3"
 )
-
-// Prefix is the URL prefix of the mods.
-const Prefix = "https://www.curseforge.com/minecraft/mc-mods/"
 
 var empty struct{}
 
@@ -35,9 +32,9 @@ func run() error {
 
 	fmt.Println("… Fetching info about the mods...")
 	bar := progressbar.Default(int64(len(urls)))
-	client, downloads := resty.New(), make(map[string]*cfwidget.ModInfo)
+	client, downloads := resty.New(), make(map[string]*twitchapi.ModInfo)
 	for _, url := range urls {
-		info, err := cfwidget.GetModInfo(client, url, version)
+		info, err := twitchapi.GetModInfo(client, url, version)
 		if err != nil {
 			return err
 		}
