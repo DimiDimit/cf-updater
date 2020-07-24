@@ -6,6 +6,10 @@
 
 A tool to update [CurseForge](https://www.curseforge.com) mods, written in [Go](https://golang.org). Currently only tested with [Minecraft](https://www.curseforge.com/minecraft/mc-mods).
 
+## Compatibility with v1
+
+Version 2 is **not** compatible with version 1! You must **refactor your mods file** or you'll get syntax errors!
+
 ## Installation
 
 ### Installing on Windows
@@ -18,37 +22,32 @@ First, [install Go](https://golang.org/doc/install).
 Then run:
 
 ```sh
-go get github.com/DimitrodAM/cf-updater
+go get github.com/DimitrodAM/cf-updater/v2
 ```
 
 ## Setup
 
 **Backup your mods before doing anything else!**
 
-Unfortunately, some setup is first required. You must put URLs to all of your mods in a file called `mods.txt`. This can be tedious if you've got a lot of mods, but I don't see a way around it. If you have an idea, please submit an [issue](https://www.github.com/DimitrodAM/cf-updater/issues) or a [pull request](https://www.github.com/DimitrodAM/cf-updater/pulls)!
+Unfortunately, some setup is first required. You must put the IDs of all of your mods in a file called `mods.txt`. This can be tedious if you've got a lot of mods, but I don't see a way around it. If you have an idea, please submit an [issue](https://www.github.com/DimitrodAM/cf-updater/issues) or a [pull request](https://www.github.com/DimitrodAM/cf-updater/pulls)!
 
 **Treat this file as the single source of mods**, because the tool will **delete** any mods not in the mods file! Files with any other extension (e.g. `.bak`) do not count as mods and will **not** be deleted.
 
+To find the ID of a mod, look at the `Project ID` in the `About Project` panel on the right of its CurseForge page.
+
 ### Example
 
-Here's an example mods file (URLs must always start with `https://`):
+Here's an example mods file:
 
 ```
 version 1.12.2
 
-https://www.curseforge.com/minecraft/mc-mods/jei
-https://www.curseforge.com/minecraft/mc-mods/shadowfacts-forgelin
-https://www.curseforge.com/minecraft/mc-mods/dimitrodam-test
-```
-
-You can also omit the URL and just include the mod's name:
-
-```
-version 1.12.2
-
-jei
-shadowfacts-forgelin
-dimitrodam-test
+# jei
+238222
+# shadowfacts-forgelin
+248453
+# dimitrodam-test
+321466
 ```
 
 `version` is the version of the game that the mods are for and is **required**. Lines starting with `#` are comments.

@@ -8,17 +8,19 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/DimitrodAM/cf-updater/cfwidget"
-	"github.com/DimitrodAM/cf-updater/modsfile"
+	"github.com/DimitrodAM/cf-updater/v2/modsfile"
+	"github.com/DimitrodAM/cf-updater/v2/twitchapi"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/schollz/progressbar/v3"
 )
 
-// Prefix is the URL prefix of the mods.
-const Prefix = "https://www.curseforge.com/minecraft/mc-mods/"
-
 var empty struct{}
+
+type download struct {
+	Info     *twitchapi.ModInfo
+	Download *twitchapi.File
+}
 
 func run() error {
 	dir := flag.String("dir", ".", "The directory where the mods are located")
@@ -28,20 +30,24 @@ func run() error {
 		return errors.Wrap(err, "error entering mods directory")
 	}
 
-	urls, excls, version, err := modsfile.ParseFile(Prefix, "mods.txt")
+	ids, excls, version, err := modsfile.ParseFile("mods.txt")
 	if err != nil {
 		return err
 	}
 
 	fmt.Println("… Fetching info about the mods...")
-	bar := progressbar.Default(int64(len(urls)))
-	client, downloads := resty.New(), make(map[string]*cfwidget.ModInfo)
-	for _, url := range urls {
-		info, err := cfwidget.GetModInfo(client, url, version)
+	client, downloads := resty.New(), make(map[string]download)
+	mods, err := twitchapi.GetMultipleMods(client, ids)
+	bar := progressbar.Default(int64(len(*mods)))
+	if err != nil {
+		return err
+	}
+	for _, info := range *mods {
+		file, err := info.LatestDownloadForVersion(client, version)
 		if err != nil {
 			return err
 		}
-		downloads[info.Download.ActualName()] = info
+		downloads[file.ActualName()] = download{info, file}
 		_ = bar.Add(1)
 	}
 
@@ -80,18 +86,15 @@ func run() error {
 
 	fmt.Println("⟳ Synchronizing mods...")
 	bar = progressbar.Default(int64(len(downloads)))
-	for name, info := range downloads {
+	for name, download := range downloads {
 		if err := func() error {
 			if _, ok := remaining[name]; ok {
-				fmt.Println("→", info.Title, "is up to date.")
+				fmt.Println("→", download.Info.Name, "is up to date.")
 				return nil
 			}
-			fmt.Printf("⤓ Downloading %v...\n", info.Title)
-			url, err := info.Download.DownloadURL(info.ID, client)
-			if err != nil {
-				return err
-			}
-			file, err := os.Create(info.Download.ActualName())
+			fmt.Printf("⤓ Downloading %v...\n", download.Info.Name)
+			url := download.Download.DownloadURL
+			file, err := os.Create(download.Download.ActualName())
 			if err != nil {
 				return err
 			}
