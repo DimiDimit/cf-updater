@@ -1,6 +1,6 @@
 # CurseForge Updater
 
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](http://pkg.go.dev/github.com/DimitrodAM/cf-updater)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://pkg.go.dev/mod/github.com/DimitrodAM/cf-updater/v2)
 ![Test and Lint](https://github.com/DimitrodAM/cf-updater/workflows/Test%20and%20Lint/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/DimitrodAM/cf-updater)](https://goreportcard.com/report/github.com/DimitrodAM/cf-updater)
 
