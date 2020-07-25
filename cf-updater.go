@@ -7,17 +7,20 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/DimitrodAM/cf-updater/v2/modsfile"
 	"github.com/DimitrodAM/cf-updater/v2/twitchapi"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/schollz/progressbar/v3"
+	"golang.org/x/sync/errgroup"
 )
 
 var empty struct{}
 
-const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36"
+const userAgent = "Mozilla/5.0 (X11; Linux x86_64) " +
+	"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36"
 
 type download struct {
 	Info     *twitchapi.ModInfo
@@ -27,11 +30,9 @@ type download struct {
 func run() error {
 	dir := flag.String("dir", ".", "The directory where the mods are located")
 	flag.Parse()
-
 	if err := os.Chdir(*dir); err != nil {
 		return errors.Wrap(err, "error entering mods directory")
 	}
-
 	ids, excls, version, err := modsfile.ParseFile("mods.txt")
 	if err != nil {
 		return err
@@ -41,81 +42,101 @@ func run() error {
 	client, downloads := resty.New(), make(map[string]download)
 	client.SetHeader("User-Agent", userAgent)
 	mods, err := twitchapi.GetMultipleMods(client, ids)
-	bar := progressbar.Default(int64(len(*mods)))
 	if err != nil {
 		return err
 	}
-	for _, info := range *mods {
-		file, err := info.LatestDownloadForVersion(client, version)
+	{
+		var g errgroup.Group
+		var downloadsm sync.Mutex
+		bar := progressbar.Default(int64(len(*mods)))
+		for _, info := range *mods {
+			info := info
+			g.Go(func() error {
+				defer barInc(bar)
+				file, err := info.LatestDownloadForVersion(client, version)
+				if err != nil {
+					return err
+				}
+				downloadsm.Lock()
+				downloads[file.ActualName()] = download{info, file}
+				downloadsm.Unlock()
+				return nil
+			})
+		}
+		if err := g.Wait(); err != nil {
+			return err
+		}
+	}
+
+	remaining := make(map[string]struct{})
+	{
+		fmt.Println("🗑 Deleting old mods...")
+		files, err := filepath.Glob("*.jar")
 		if err != nil {
 			return err
 		}
-		downloads[file.ActualName()] = download{info, file}
-		_ = bar.Add(1)
-	}
-
-	fmt.Println("🗑 Deleting old mods...")
-	files, err := filepath.Glob("*.jar")
-	if err != nil {
-		return err
-	}
-	bar = progressbar.Default(int64(len(files)))
-	remaining := make(map[string]struct{})
-	for _, file := range files {
-		kept, err := func() (kept bool, err error) {
-			kept = true
-			if _, ok := downloads[file]; ok {
-				return
-			}
-			for _, excl := range excls {
-				if excl.MatchString(file) {
+		bar := progressbar.Default(int64(len(files)))
+		for _, file := range files {
+			kept, err := func() (kept bool, err error) {
+				kept = true
+				if _, ok := downloads[file]; ok {
 					return
 				}
-			}
-			fmt.Println("Deleting", file)
-			err = os.Remove(file)
+				for _, excl := range excls {
+					if excl.MatchString(file) {
+						return
+					}
+				}
+				fmt.Println("Deleting", file)
+				err = os.Remove(file)
+				if err != nil {
+					return false, err
+				}
+				return false, nil
+			}()
 			if err != nil {
-				return false, err
+				return err
+			} else if kept {
+				remaining[file] = empty
 			}
-			return false, nil
-		}()
-		if err != nil {
-			return err
-		} else if kept {
-			remaining[file] = empty
+			barInc(bar)
 		}
-		_ = bar.Add(1)
 	}
 
-	fmt.Println("⟳ Synchronizing mods...")
-	bar = progressbar.Default(int64(len(downloads)))
-	for name, download := range downloads {
-		if err := func() error {
-			if _, ok := remaining[name]; ok {
-				fmt.Println("→", download.Info.Name, "is up to date.")
+	{
+		fmt.Println("⟳ Synchronizing mods...")
+		var g errgroup.Group
+		bar := progressbar.Default(int64(len(downloads)))
+		for name, download := range downloads {
+			name, download := name, download
+			g.Go(func() error {
+				defer barInc(bar)
+				if _, ok := remaining[name]; ok {
+					fmt.Println("→", download.Info.Name, "is up to date.")
+					return nil
+				}
+				fmt.Printf("⤓ Downloading %v...\n", download.Info.Name)
+				url := download.Download.DownloadURL
+				file, err := os.Create(download.Download.ActualName())
+				if err != nil {
+					return err
+				}
+				defer file.Close()
+				resp, err := http.Get(url)
+				if err != nil {
+					return err
+				}
+				defer resp.Body.Close()
+				_, err = io.Copy(file, resp.Body)
+				if err != nil {
+					return err
+				}
 				return nil
-			}
-			fmt.Printf("⤓ Downloading %v...\n", download.Info.Name)
-			url := download.Download.DownloadURL
-			file, err := os.Create(download.Download.ActualName())
-			if err != nil {
-				return err
-			}
-			defer file.Close()
-			resp, err := http.Get(url)
-			if err != nil {
-				return err
-			}
-			defer resp.Body.Close()
-			_, err = io.Copy(file, resp.Body)
-			if err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
+			})
+		}
+		if err := g.Wait(); err != nil {
 			return err
 		}
-		_ = bar.Add(1)
 	}
 
 	return nil
@@ -126,4 +147,8 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func barInc(bar *progressbar.ProgressBar) {
+	_ = bar.Add(1)
 }

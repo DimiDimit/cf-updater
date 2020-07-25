@@ -36,7 +36,7 @@ func (info *ModInfo) LatestDownloadForVersion(client *resty.Client, version stri
 		}
 	}
 	if !seen {
-		return nil, errors.New(fmt.Sprintf("couldn't find a download of %v for version %v", info.Name, version))
+		return nil, fmt.Errorf("couldn't find a download of %v for version %v", info.Name, version)
 	}
 
 	file, seen := findFileByID(info.LatestFiles, id)
@@ -52,7 +52,7 @@ func (info *ModInfo) LatestDownloadForVersion(client *resty.Client, version stri
 		file, seen = findFileByID(*files, id)
 		if !seen {
 			// Nothing we can do about it now.
-			return nil, errors.New(fmt.Sprintf("couldn't find a download with ID %v for %v", id, info.Name))
+			return nil, fmt.Errorf("couldn't find a download with ID %v for %v", id, info.Name)
 		}
 	}
 	return file, nil
