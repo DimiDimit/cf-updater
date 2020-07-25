@@ -17,6 +17,8 @@ import (
 
 var empty struct{}
 
+const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36"
+
 type download struct {
 	Info     *twitchapi.ModInfo
 	Download *twitchapi.File
@@ -37,6 +39,7 @@ func run() error {
 
 	fmt.Println("… Fetching info about the mods...")
 	client, downloads := resty.New(), make(map[string]download)
+	client.SetHeader("User-Agent", userAgent)
 	mods, err := twitchapi.GetMultipleMods(client, ids)
 	bar := progressbar.Default(int64(len(*mods)))
 	if err != nil {
