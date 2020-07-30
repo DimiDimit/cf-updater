@@ -29,6 +29,7 @@ type download struct {
 
 func run() error {
 	dir := flag.String("dir", ".", "The directory where the mods are located")
+	upToDate := flag.Bool("u2d", false, "List up to date mods, useful for debugging")
 	flag.Parse()
 	if err := os.Chdir(*dir); err != nil {
 		return errors.Wrap(err, "error entering mods directory")
@@ -112,7 +113,9 @@ func run() error {
 			g.Go(func() error {
 				defer barInc(bar)
 				if _, ok := remaining[name]; ok {
-					fmt.Println("→", download.Info.Name, "is up to date.")
+					if *upToDate {
+						fmt.Println("→", download.Info.Name, "is up to date.")
+					}
 					return nil
 				}
 				fmt.Printf("⤓ Downloading %v...\n", download.Info.Name)
