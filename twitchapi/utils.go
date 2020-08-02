@@ -3,6 +3,7 @@ package twitchapi
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
@@ -12,36 +13,35 @@ type files struct {
 	Files []File
 }
 
-func findFileByID(files []File, id int) (tfile *File, seen bool) {
+func findLatestMatchingFile(files []File, version string,
+	releaseType int, modVersion int) (tfile File, seen bool) {
+	var latestTime time.Time
 	for _, file := range files {
-		if file.ID == id {
-			tfile = &file
+		seenVersion := false
+		for _, ver := range file.GameVersion {
+			if ver == version {
+				seenVersion = true
+				break
+			}
+		}
+		if seenVersion &&
+			latestTime.Before(file.FileDate) &&
+			(releaseType == -1 || releaseType <= file.ReleaseType) &&
+			(modVersion == -1 || modVersion == file.ID) {
 			seen = true
-			break
+			tfile = file
+			latestTime = file.FileDate
 		}
 	}
 	return
 }
 
-// LatestDownloadForVersion returns the latest download for a version or an error if no such download exists.
-// It prioritizes releases over betas over alphas (though that is subject to change because of the Twitch API).
-func (info *ModInfo) LatestDownloadForVersion(client *resty.Client, version string) (*File, error) {
-	var id int
-	seen := false
-	for _, file := range info.GameVersionLatestFiles {
-		if file.GameVersion == version {
-			id = file.ProjectFileID
-			seen = true
-			break
-		}
-	}
+// LatestDownload returns the latest download that fulfills certain conditions or an error if no such download exists.
+// If releaseType or modVersion is -1, the respective condition is ignored.
+func (info *ModInfo) LatestDownload(
+	client *resty.Client, version string, releaseType int, modVersion int) (*File, error) {
+	file, seen := findLatestMatchingFile(info.LatestFiles, version, releaseType, modVersion)
 	if !seen {
-		return nil, fmt.Errorf("couldn't find a download of %v for version %v", info.Name, version)
-	}
-
-	file, seen := findFileByID(info.LatestFiles, id)
-	if !seen {
-		// This actually happens relatively often.
 		resp, err := client.R().
 			SetResult(files{}.Files).
 			Get(fmt.Sprintf("https://%v/api/v2/addon/%v/files", Endpoint, info.ID))
@@ -49,13 +49,15 @@ func (info *ModInfo) LatestDownloadForVersion(client *resty.Client, version stri
 			return nil, errors.Wrap(err, "error fetching downloads for "+info.Name)
 		}
 		files := resp.Result().(*[]File)
-		file, seen = findFileByID(*files, id)
+		file, seen = findLatestMatchingFile(*files, version, releaseType, modVersion)
 		if !seen {
-			// Nothing we can do about it now.
-			return nil, fmt.Errorf("couldn't find a download with ID %v for %v", id, info.Name)
+			return nil, fmt.Errorf(`couldn't find a download for %v that satisfies:
+Game Version: %v
+Release Type: %v or lower
+Mod Version ID: %v`, info.Name, version, releaseType, modVersion)
 		}
 	}
-	return file, nil
+	return &file, nil
 }
 
 // ActualName returns the actual name of a mod, because CurseForge replaces spaces with pluses.

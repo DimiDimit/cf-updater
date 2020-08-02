@@ -8,15 +8,19 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/elliotchance/orderedmap"
+	"github.com/DimitrodAM/cf-updater/v3/twitchapi"
 	"github.com/pkg/errors"
 )
 
-var empty struct{}
+// Mod represents additional information about a mod.
+type Mod struct {
+	ModVersion  int
+	ReleaseType int
+}
 
-// Parse returns a slice of IDs and a slice of exclusions.
-func Parse(file io.Reader) (idsSlice []int, excls []*regexp.Regexp, version string, err error) {
-	ids := orderedmap.NewOrderedMap()
+// Parse returns a map of Mods and a slice of exclusions.
+func Parse(file io.Reader) (mods map[int]Mod, excls []*regexp.Regexp, version string, err error) {
+	mods = make(map[int]Mod)
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
@@ -24,14 +28,30 @@ func Parse(file io.Reader) (idsSlice []int, excls []*regexp.Regexp, version stri
 
 		switch {
 		default:
-			id, err := strconv.Atoi(line)
+			fields := strings.Split(line, " ")
+			id, err := strconv.Atoi(fields[0])
 			if err != nil {
 				return nil, nil, "", errors.New("invalid syntax: " + line)
 			}
-			if _, ok := ids.Get(id); ok {
+			if _, ok := mods[id]; ok {
 				return nil, nil, "", errors.New("duplicated ID: " + line)
 			}
-			ids.Set(id, empty)
+
+			nfields, modVersion, releaseType := len(fields), -1, -1
+			if nfields >= 2 {
+				cf := fields[1]
+				ver, err := strconv.Atoi(cf)
+				if err == nil {
+					modVersion = ver
+				} else {
+					rt, ok := twitchapi.ReleaseTypes[cf]
+					if !ok {
+						return nil, nil, "", errors.New("unknown release type: " + cf)
+					}
+					releaseType = rt
+				}
+			}
+			mods[id] = Mod{modVersion, releaseType}
 
 		case strings.HasPrefix(line, "exclude "):
 			regex, err := regexp.Compile(strings.TrimSpace(strings.TrimPrefix(line, "exclude")))
@@ -59,14 +79,11 @@ func Parse(file io.Reader) (idsSlice []int, excls []*regexp.Regexp, version stri
 		return nil, nil, "", errors.New("version statement missing")
 	}
 
-	for id := ids.Front(); id != nil; id = id.Next() {
-		idsSlice = append(idsSlice, id.Key.(int))
-	}
 	return
 }
 
-// ParseFile opens the file called fileName and calls Parse.
-func ParseFile(fileName string) ([]int, []*regexp.Regexp, string, error) {
+// ParseFile opens the file named fileName and calls Parse.
+func ParseFile(fileName string) (map[int]Mod, []*regexp.Regexp, string, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		return nil, nil, "", errors.Wrap(err, "error opening mods file")

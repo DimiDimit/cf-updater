@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/DimitrodAM/cf-updater/v2/modsfile"
-	"github.com/DimitrodAM/cf-updater/v2/twitchapi"
+	"github.com/DimitrodAM/cf-updater/v3/modsfile"
+	"github.com/DimitrodAM/cf-updater/v3/twitchapi"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/schollz/progressbar/v3"
@@ -29,32 +29,42 @@ type download struct {
 
 func run() error {
 	dir := flag.String("dir", ".", "The directory where the mods are located")
-	upToDate := flag.Bool("u2d", false, "List up to date mods, useful for debugging")
+	showUpToDate := flag.Bool("u2d", false, "List up to date mods, useful for debugging")
+	hideKeptBack := flag.Bool("hidekb", false, "Hide mods which are kept back from upgrading")
 	flag.Parse()
 	if err := os.Chdir(*dir); err != nil {
 		return errors.Wrap(err, "error entering mods directory")
 	}
-	ids, excls, version, err := modsfile.ParseFile("mods.txt")
+	mods, excls, version, err := modsfile.ParseFile("mods.txt")
 	if err != nil {
 		return err
+	}
+	ids := make([]int, len(mods))
+	{
+		i := 0
+		for k := range mods {
+			ids[i] = k
+			i++
+		}
 	}
 
 	fmt.Println("… Fetching info about the mods...")
 	client, downloads := resty.New(), make(map[string]download)
 	client.SetHeader("User-Agent", userAgent)
-	mods, err := twitchapi.GetMultipleMods(client, ids)
+	modInfos, err := twitchapi.GetMultipleMods(client, ids)
 	if err != nil {
 		return err
 	}
 	{
 		var g errgroup.Group
 		var downloadsm sync.Mutex
-		bar := progressbar.Default(int64(len(*mods)))
-		for _, info := range *mods {
+		bar := progressbar.Default(int64(len(*modInfos)))
+		for _, info := range *modInfos {
 			info := info
 			g.Go(func() error {
 				defer barInc(bar)
-				file, err := info.LatestDownloadForVersion(client, version)
+				mod := mods[info.ID]
+				file, err := info.LatestDownload(client, version, mod.ReleaseType, mod.ModVersion)
 				if err != nil {
 					return err
 				}
@@ -113,7 +123,11 @@ func run() error {
 			g.Go(func() error {
 				defer barInc(bar)
 				if _, ok := remaining[name]; ok {
-					if *upToDate {
+					if mods[download.Info.ID].ModVersion != -1 {
+						if !*hideKeptBack {
+							fmt.Println("←", download.Info.Name, "has been kept back.")
+						}
+					} else if *showUpToDate {
 						fmt.Println("→", download.Info.Name, "is up to date.")
 					}
 					return nil

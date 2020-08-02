@@ -11,6 +11,13 @@ import (
 // Endpoint is the Twitch API endpoint domain.
 const Endpoint = "addons-ecs.forgesvc.net"
 
+// ReleaseTypes is a map of human-readable release types to their IDs.
+var ReleaseTypes = map[string]int{
+	"release": 1,
+	"beta":    2,
+	"alpha":   3,
+}
+
 // ModInfo represents information about a mod, as returned from the Twitch API.
 type ModInfo struct {
 	ID      int

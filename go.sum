@@ -1,5 +1,7 @@
 github.com/DimitrodAM/cf-updater v1.1.0 h1:YqUNStNWbIPZ+WB+wrBEhWjgyiLYSqjuxck4U0DnHIM=
 github.com/DimitrodAM/cf-updater v1.1.0/go.mod h1:KBYx85bpCAxuNA23yt5Syw+H9gUfeg0p+EN5ttNWT2M=
+github.com/DimitrodAM/cf-updater/v2 v2.1.0 h1:qePtFj1DVx2xkoYooAoYW/mzeZAm+NvHNAxIOOJ6wfE=
+github.com/DimitrodAM/cf-updater/v2 v2.1.0/go.mod h1:hfT+Mpu8nkLaxmoDCqRlzWLN7W7vQM48/feyiarw0QI=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/elliotchance/orderedmap v1.3.0 h1:k6m77/d0zCXTjsk12nX40TkEBkSICq8T4s6R6bpCqU0=

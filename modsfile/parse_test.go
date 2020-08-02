@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/DimitrodAM/cf-updater/v3/twitchapi"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -21,15 +22,15 @@ func regexpCompare(x, y *regexp.Regexp) bool {
 }
 
 func test(t *testing.T, file string,
-	expIDs []int, expExcls []*regexp.Regexp, expVersion string, expErr bool) {
-	resIDs, resExcls, resVersion, resErr := Parse(strings.NewReader(file))
+	expMods map[int]Mod, expExcls []*regexp.Regexp, expVersion string, expErr bool) {
+	resMods, resExcls, resVersion, resErr := Parse(strings.NewReader(file))
 	if !expErr && resErr != nil {
 		t.Errorf("Expected success, got %v", resErr)
 	} else if expErr && resErr == nil {
 		t.Error("Expected error, but got success")
 	}
-	if diff := cmp.Diff(expIDs, resIDs); diff != "" {
-		t.Errorf("IDs are different:\n%v", diff)
+	if diff := cmp.Diff(expMods, resMods); diff != "" {
+		t.Errorf("Mods are different:\n%v", diff)
 	}
 	if diff := cmp.Diff(expExcls, resExcls, cmp.Comparer(regexpCompare)); diff != "" {
 		t.Errorf("Exclusions are different:\n%v", diff)
@@ -39,8 +40,17 @@ func test(t *testing.T, file string,
 	}
 }
 
+func testN(t *testing.T, file string,
+	expIDs []int, expExcls []*regexp.Regexp, expVersion string, expErr bool) {
+	expMods := make(map[int]Mod)
+	for _, id := range expIDs {
+		expMods[id] = Mod{-1, -1}
+	}
+	test(t, file, expMods, expExcls, expVersion, expErr)
+}
+
 func TestIDs(t *testing.T) {
-	test(t,
+	testN(t,
 		`version 1.12.2
 
 		 # jei
@@ -59,7 +69,7 @@ func TestExcludes(t *testing.T) {
 
 		 exclude ^OptiFine.*\.jar$
 		 exclude ^Computronics.*\.jar$`,
-		nil, []*regexp.Regexp{
+		map[int]Mod{}, []*regexp.Regexp{
 			compile(t, "^OptiFine.*\\.jar$"),
 			compile(t, "^Computronics.*\\.jar$"),
 		}, "1.12.2", false)
@@ -81,8 +91,8 @@ func TestComments(t *testing.T) {
 		 #comment
 
 		 #
-		 # comment with space`,
-		nil, nil, "1.12.2", false)
+		 ## comment with space`,
+		map[int]Mod{}, nil, "1.12.2", false)
 }
 
 func TestRegexpErrors(t *testing.T) {
@@ -118,25 +128,53 @@ func TestVersion(t *testing.T) {
 		 version 1.12.2`, nil, nil, "", true)
 }
 
+func TestModVersion(t *testing.T) {
+	test(t,
+		`version 1.12.2
+
+		 292785 2639533`, map[int]Mod{
+			292785: {2639533, -1},
+		}, nil, "1.12.2", false)
+}
+
+func TestReleaseType(t *testing.T) {
+	test(t,
+		`version 1.12.2
+
+		 69162 release
+		 239286 beta
+		 238222 alpha`, map[int]Mod{
+			69162:  {-1, twitchapi.ReleaseTypes["release"]},
+			239286: {-1, twitchapi.ReleaseTypes["beta"]},
+			238222: {-1, twitchapi.ReleaseTypes["alpha"]},
+		}, nil, "1.12.2", false)
+	test(t,
+		`version 1.12.2
+
+		69162 re1ease
+		239286 Beta
+		238222 ALPHA`, nil, nil, "", true)
+}
+
 func TestMixed(t *testing.T) {
 	test(t,
 		`version 1.12.2
 
-		 # Not dependencies of my mod
+		 ## Not dependencies of my mod
 		 # jei
 		 238222
 
-		 # Dependencies of my mod
+		 ## Dependencies of my mod
 		 # shadowfacts-forgelin
 		 248453
 		 # dimitrodam-test
 		 321466
 		 
-		 # We want to keep OptiFine and Computronics.
+		 ## We want to keep OptiFine and Computronics.
 		 exclude ^OptiFine.*\.jar$
 		 exclude ^Computronics.*\.jar$
 		 
-		 # Thermal mods
+		 ## Thermal mods
 		 # cofh-core
 		 69162
 		 # cofh-world
@@ -144,9 +182,23 @@ func TestMixed(t *testing.T) {
 		 # thermal-foundation
 		 222880
 		 # thermal-expansion
-		 69163`,
-		[]int{
-			238222, 248453, 321466, 69162, 271384, 222880, 69163,
+		 69163
+		 
+		 ## Miscellaneous mods
+		 # vanillafix 1.0.10-99
+		 292785 2639533
+		 # cyclic
+     239286 beta`,
+		map[int]Mod{
+			238222: {-1, -1},
+			248453: {-1, -1},
+			321466: {-1, -1},
+			69162:  {-1, -1},
+			271384: {-1, -1},
+			222880: {-1, -1},
+			69163:  {-1, -1},
+			292785: {2639533, -1},
+			239286: {-1, twitchapi.ReleaseTypes["beta"]},
 		}, []*regexp.Regexp{
 			compile(t, "^OptiFine.*\\.jar$"),
 			compile(t, "^Computronics.*\\.jar$"),

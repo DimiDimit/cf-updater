@@ -1,12 +1,18 @@
 # CurseForge Updater
 
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://pkg.go.dev/mod/github.com/DimitrodAM/cf-updater/v2)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://pkg.go.dev/mod/github.com/DimitrodAM/cf-updater/v3)
 ![Test and Lint](https://github.com/DimitrodAM/cf-updater/workflows/Test%20and%20Lint/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/DimitrodAM/cf-updater)](https://goreportcard.com/report/github.com/DimitrodAM/cf-updater)
 
 A tool to update [CurseForge](https://www.curseforge.com) mods, written in [Go](https://golang.org). Currently only tested with [Minecraft](https://www.curseforge.com/minecraft/mc-mods).
 
-## Compatibility with v1
+## Compatibility
+
+### Compatibility with v2
+
+Version 3's mods file **is** compatible with version 2! But note that the API is **not**.
+
+### Compatibility with v1
 
 Version 2 is **not** compatible with version 1! You must **refactor your mods file** or you'll get syntax errors!
 
@@ -22,7 +28,7 @@ First, [install Go](https://golang.org/doc/install).
 Then run:
 
 ```sh
-go get github.com/DimitrodAM/cf-updater/v2
+go get github.com/DimitrodAM/cf-updater/v3
 ```
 
 ## Setup
@@ -42,6 +48,7 @@ Here's an example mods file:
 ```
 version 1.12.2
 
+## Some mods
 # jei
 238222
 # shadowfacts-forgelin
@@ -51,6 +58,21 @@ version 1.12.2
 ```
 
 `version` is the version of the game that the mods are for and is **required**. Lines starting with `#` are comments.
+
+### Versions and types
+
+Sometimes you may want to keep a mod on a certain version or use a different release type (e.g. alpha, beta or release). You can do so like this:
+
+```
+version 1.12.2
+
+# cyclic
+239286 beta
+# vanillafix 1.0.10-99
+292785 2639533
+```
+
+Version IDs can be found in their URLs.
 
 ### Mods not on CurseForge
 
