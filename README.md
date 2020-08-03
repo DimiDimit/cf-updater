@@ -28,7 +28,7 @@ First, [install Go](https://golang.org/doc/install).
 Then run:
 
 ```sh
-go get github.com/DimitrodAM/cf-updater/v3
+go get github.com/DimitrodAM/cf-updater
 ```
 
 ## Setup
