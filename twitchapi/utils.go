@@ -26,7 +26,7 @@ func findLatestMatchingFile(files []File, version string,
 		}
 		if seenVersion &&
 			latestTime.Before(file.FileDate) &&
-			(releaseType == -1 || releaseType <= file.ReleaseType) &&
+			(releaseType == -1 || releaseType >= file.ReleaseType) &&
 			(modVersion == -1 || modVersion == file.ID) {
 			seen = true
 			tfile = file
