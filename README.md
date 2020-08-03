@@ -16,7 +16,7 @@ Version 3's mods file **is** compatible with version 2! But note that the API is
 
 Version 2 is **not** compatible with version 1! You must **refactor your mods file** or you'll get syntax errors!
 
-## Installation
+## Installation and upgrading
 
 ### Installing on Windows
 
@@ -28,8 +28,14 @@ First, [install Go](https://golang.org/doc/install).
 Then run:
 
 ```sh
-go get github.com/DimitrodAM/cf-updater
+go get -u github.com/DimitrodAM/cf-updater
 ```
+
+### Upgrading
+
+The program has **no** built-in update checker or updater, so you should **watch the repository** in “Releases only” mode to get notified of updates.
+
+The upgrade process is the same as the installation.
 
 ## Setup
 
