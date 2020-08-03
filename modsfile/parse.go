@@ -18,6 +18,9 @@ type Mod struct {
 	ReleaseType int
 }
 
+// DefaultReleaseType is the release type used when one isn't specified.
+var DefaultReleaseType = twitchapi.ReleaseTypes["release"]
+
 // Parse returns a map of Mods and a slice of exclusions.
 func Parse(file io.Reader) (mods map[int]Mod, excls []*regexp.Regexp, version string, err error) {
 	mods = make(map[int]Mod)
@@ -37,7 +40,7 @@ func Parse(file io.Reader) (mods map[int]Mod, excls []*regexp.Regexp, version st
 				return nil, nil, "", errors.New("duplicated ID: " + line)
 			}
 
-			nfields, modVersion, releaseType := len(fields), -1, -1
+			nfields, modVersion, releaseType := len(fields), -1, DefaultReleaseType
 			if nfields >= 2 {
 				cf := fields[1]
 				ver, err := strconv.Atoi(cf)

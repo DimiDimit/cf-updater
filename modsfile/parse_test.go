@@ -44,7 +44,7 @@ func testN(t *testing.T, file string,
 	expIDs []int, expExcls []*regexp.Regexp, expVersion string, expErr bool) {
 	expMods := make(map[int]Mod)
 	for _, id := range expIDs {
-		expMods[id] = Mod{-1, -1}
+		expMods[id] = Mod{-1, DefaultReleaseType}
 	}
 	test(t, file, expMods, expExcls, expVersion, expErr)
 }
@@ -133,7 +133,7 @@ func TestModVersion(t *testing.T) {
 		`version 1.12.2
 
 		 292785 2639533`, map[int]Mod{
-			292785: {2639533, -1},
+			292785: {2639533, DefaultReleaseType},
 		}, nil, "1.12.2", false)
 }
 
@@ -190,14 +190,14 @@ func TestMixed(t *testing.T) {
 		 # cyclic
      239286 beta`,
 		map[int]Mod{
-			238222: {-1, -1},
-			248453: {-1, -1},
-			321466: {-1, -1},
-			69162:  {-1, -1},
-			271384: {-1, -1},
-			222880: {-1, -1},
-			69163:  {-1, -1},
-			292785: {2639533, -1},
+			238222: {-1, DefaultReleaseType},
+			248453: {-1, DefaultReleaseType},
+			321466: {-1, DefaultReleaseType},
+			69162:  {-1, DefaultReleaseType},
+			271384: {-1, DefaultReleaseType},
+			222880: {-1, DefaultReleaseType},
+			69163:  {-1, DefaultReleaseType},
+			292785: {2639533, DefaultReleaseType},
 			239286: {-1, twitchapi.ReleaseTypes["beta"]},
 		}, []*regexp.Regexp{
 			compile(t, "^OptiFine.*\\.jar$"),
