@@ -22,8 +22,8 @@ func regexpCompare(x, y *regexp.Regexp) bool {
 }
 
 func test(t *testing.T, file string,
-	expMods map[int]Mod, expExcls []*regexp.Regexp, expVersion string, expErr bool) {
-	resMods, resExcls, resVersion, resErr := Parse(strings.NewReader(file))
+	expMods map[int]Mod, expExcls []*regexp.Regexp, expVersions []string, expErr bool) {
+	resMods, resExcls, resVersions, resErr := Parse(strings.NewReader(file))
 	if !expErr && resErr != nil {
 		t.Errorf("Expected success, got %v", resErr)
 	} else if expErr && resErr == nil {
@@ -35,18 +35,18 @@ func test(t *testing.T, file string,
 	if diff := cmp.Diff(expExcls, resExcls, cmp.Comparer(regexpCompare)); diff != "" {
 		t.Errorf("Exclusions are different:\n%v", diff)
 	}
-	if diff := cmp.Diff(expVersion, resVersion); diff != "" {
+	if diff := cmp.Diff(expVersions, resVersions); diff != "" {
 		t.Errorf("Versions are different:\n%v", diff)
 	}
 }
 
 func testN(t *testing.T, file string,
-	expIDs []int, expExcls []*regexp.Regexp, expVersion string, expErr bool) {
+	expIDs []int, expExcls []*regexp.Regexp, expVersions []string, expErr bool) {
 	expMods := make(map[int]Mod)
 	for _, id := range expIDs {
 		expMods[id] = Mod{-1, DefaultReleaseType}
 	}
-	test(t, file, expMods, expExcls, expVersion, expErr)
+	test(t, file, expMods, expExcls, expVersions, expErr)
 }
 
 func TestIDs(t *testing.T) {
@@ -60,7 +60,7 @@ func TestIDs(t *testing.T) {
 		 248453
 		 # dimitrodam-test
 		 321466`,
-		[]int{238222, 248453, 321466}, nil, "1.12.2", false)
+		[]int{238222, 248453, 321466}, nil, []string{"1.12.2"}, false)
 }
 
 func TestExcludes(t *testing.T) {
@@ -72,7 +72,7 @@ func TestExcludes(t *testing.T) {
 		map[int]Mod{}, []*regexp.Regexp{
 			compile(t, "^OptiFine.*\\.jar$"),
 			compile(t, "^Computronics.*\\.jar$"),
-		}, "1.12.2", false)
+		}, []string{"1.12.2"}, false)
 }
 
 func TestNonNumeric(t *testing.T) {
@@ -81,7 +81,7 @@ func TestNonNumeric(t *testing.T) {
 
 		 cofhcore
 		 https://somedifferentprefix`,
-		nil, nil, "", true)
+		nil, nil, nil, true)
 }
 
 func TestComments(t *testing.T) {
@@ -92,7 +92,7 @@ func TestComments(t *testing.T) {
 
 		 #
 		 ## comment with space`,
-		map[int]Mod{}, nil, "1.12.2", false)
+		map[int]Mod{}, nil, []string{"1.12.2"}, false)
 }
 
 func TestRegexpErrors(t *testing.T) {
@@ -104,7 +104,7 @@ func TestRegexpErrors(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			test(t, "version 1.12.2\nexclude "+tc, nil, nil, "", true)
+			test(t, "version 1.12.2\nexclude "+tc, nil, nil, nil, true)
 		})
 	}
 }
@@ -114,18 +114,18 @@ func TestDuplication(t *testing.T) {
 		`version 1.12.2
 
 		 238222
-		 238222`, nil, nil, "", true)
+		 238222`, nil, nil, nil, true)
 }
 
 func TestVersion(t *testing.T) {
 	test(t,
-		"238222", nil, nil, "", true)
+		"238222", nil, nil, nil, true)
 	test(t,
 		`version 1.12.2
 
 		 238222
 
-		 version 1.12.2`, nil, nil, "", true)
+		 version 1.12.2`, nil, nil, nil, true)
 }
 
 func TestModVersion(t *testing.T) {
@@ -134,7 +134,7 @@ func TestModVersion(t *testing.T) {
 
 		 292785 2639533`, map[int]Mod{
 			292785: {2639533, DefaultReleaseType},
-		}, nil, "1.12.2", false)
+		}, nil, []string{"1.12.2"}, false)
 }
 
 func TestReleaseType(t *testing.T) {
@@ -147,13 +147,13 @@ func TestReleaseType(t *testing.T) {
 			69162:  {-1, twitchapi.ReleaseTypes["release"]},
 			239286: {-1, twitchapi.ReleaseTypes["beta"]},
 			238222: {-1, twitchapi.ReleaseTypes["alpha"]},
-		}, nil, "1.12.2", false)
+		}, nil, []string{"1.12.2"}, false)
 	test(t,
 		`version 1.12.2
 
 		69162 re1ease
 		239286 Beta
-		238222 ALPHA`, nil, nil, "", true)
+		238222 ALPHA`, nil, nil, nil, true)
 }
 
 func TestMixed(t *testing.T) {
@@ -202,5 +202,5 @@ func TestMixed(t *testing.T) {
 		}, []*regexp.Regexp{
 			compile(t, "^OptiFine.*\\.jar$"),
 			compile(t, "^Computronics.*\\.jar$"),
-		}, "1.12.2", false)
+		}, []string{"1.12.2"}, false)
 }
