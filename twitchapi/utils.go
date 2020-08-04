@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/DimitrodAM/cf-updater/v3/common"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 )
@@ -13,18 +14,24 @@ type files struct {
 	Files []File
 }
 
-func findLatestMatchingFile(files []File, version string,
+func findLatestMatchingFile(files []File, versions []string,
 	releaseType int, modVersion int) (tfile File, seen bool) {
+	versionsn := len(versions)
 	var latestTime time.Time
 	for _, file := range files {
-		seenVersion := false
+		seenVersions := 0
+	ver:
 		for _, ver := range file.GameVersion {
-			if ver == version {
-				seenVersion = true
-				break
+			for _, version := range versions {
+				if ver == version {
+					seenVersions++
+					if seenVersions >= versionsn {
+						break ver
+					}
+				}
 			}
 		}
-		if seenVersion &&
+		if seenVersions >= versionsn &&
 			latestTime.Before(file.FileDate) &&
 			(releaseType == -1 || releaseType >= file.ReleaseType) &&
 			(modVersion == -1 || modVersion == file.ID) {
@@ -40,7 +47,8 @@ func findLatestMatchingFile(files []File, version string,
 // If releaseType or modVersion is -1, the respective condition is ignored.
 func (info *ModInfo) LatestDownload(
 	client *resty.Client, version string, releaseType int, modVersion int) (*File, error) {
-	file, seen := findLatestMatchingFile(info.LatestFiles, version, releaseType, modVersion)
+	versions := common.FieldSeparator.Split(version, -1)
+	file, seen := findLatestMatchingFile(info.LatestFiles, versions, releaseType, modVersion)
 	if !seen {
 		resp, err := client.R().
 			SetResult(files{}.Files).
@@ -49,7 +57,7 @@ func (info *ModInfo) LatestDownload(
 			return nil, errors.Wrap(err, "error fetching downloads for "+info.Name)
 		}
 		files := resp.Result().(*[]File)
-		file, seen = findLatestMatchingFile(*files, version, releaseType, modVersion)
+		file, seen = findLatestMatchingFile(*files, versions, releaseType, modVersion)
 		if !seen {
 			return nil, fmt.Errorf(`couldn't find a download for %v that satisfies:
 Game Version: %v

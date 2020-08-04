@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/DimitrodAM/cf-updater/v3/common"
 	"github.com/DimitrodAM/cf-updater/v3/twitchapi"
 	"github.com/pkg/errors"
 )
@@ -21,8 +22,6 @@ type Mod struct {
 // DefaultReleaseType is the release type used when one isn't specified.
 var DefaultReleaseType = twitchapi.ReleaseTypes["release"]
 
-var fieldSeparator = regexp.MustCompile(`\s+`)
-
 // Parse returns a map of Mods and a slice of exclusions.
 func Parse(file io.Reader) (mods map[int]Mod, excls []*regexp.Regexp, version string, err error) {
 	mods = make(map[int]Mod)
@@ -33,7 +32,7 @@ func Parse(file io.Reader) (mods map[int]Mod, excls []*regexp.Regexp, version st
 
 		switch {
 		default:
-			fields := fieldSeparator.Split(line, -1)
+			fields := common.FieldSeparator.Split(line, -1)
 			id, err := strconv.Atoi(fields[0])
 			if err != nil {
 				return nil, nil, "", errors.New("invalid syntax: " + line)
