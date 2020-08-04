@@ -21,7 +21,7 @@ type Mod struct {
 // DefaultReleaseType is the release type used when one isn't specified.
 var DefaultReleaseType = twitchapi.ReleaseTypes["release"]
 
-var fieldSeparator = regexp.MustCompile("\\s+")
+var fieldSeparator = regexp.MustCompile(`\s+`)
 
 // Parse returns a map of Mods and a slice of exclusions.
 func Parse(file io.Reader) (mods map[int]Mod, excls []*regexp.Regexp, version string, err error) {
