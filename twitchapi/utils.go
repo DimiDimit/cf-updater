@@ -13,18 +13,24 @@ type files struct {
 	Files []File
 }
 
-func findLatestMatchingFile(files []File, version string,
+func findLatestMatchingFile(files []File, versions []string,
 	releaseType int, modVersion int) (tfile File, seen bool) {
+	versionn := len(versions)
 	var latestTime time.Time
 	for _, file := range files {
-		seenVersion := false
+		seenVersions := 0
+	ver:
 		for _, ver := range file.GameVersion {
-			if ver == version {
-				seenVersion = true
-				break
+			for _, version := range versions {
+				if ver == version {
+					seenVersions++
+					if seenVersions >= versionn {
+						break ver
+					}
+				}
 			}
 		}
-		if seenVersion &&
+		if seenVersions >= versionn &&
 			latestTime.Before(file.FileDate) &&
 			(releaseType == -1 || releaseType >= file.ReleaseType) &&
 			(modVersion == -1 || modVersion == file.ID) {
@@ -39,8 +45,8 @@ func findLatestMatchingFile(files []File, version string,
 // LatestDownload returns the latest download that fulfills certain conditions or an error if no such download exists.
 // If releaseType or modVersion is -1, the respective condition is ignored.
 func (info *ModInfo) LatestDownload(
-	client *resty.Client, version string, releaseType int, modVersion int) (*File, error) {
-	file, seen := findLatestMatchingFile(info.LatestFiles, version, releaseType, modVersion)
+	client *resty.Client, versions []string, releaseType int, modVersion int) (*File, error) {
+	file, seen := findLatestMatchingFile(info.LatestFiles, versions, releaseType, modVersion)
 	if !seen {
 		resp, err := client.R().
 			SetResult(files{}.Files).
@@ -49,12 +55,12 @@ func (info *ModInfo) LatestDownload(
 			return nil, errors.Wrap(err, "error fetching downloads for "+info.Name)
 		}
 		files := resp.Result().(*[]File)
-		file, seen = findLatestMatchingFile(*files, version, releaseType, modVersion)
+		file, seen = findLatestMatchingFile(*files, versions, releaseType, modVersion)
 		if !seen {
 			return nil, fmt.Errorf(`couldn't find a download for %v that satisfies:
 Game Version: %v
 Release Type: %v or lower
-Mod Version ID: %v`, info.Name, version, releaseType, modVersion)
+Mod Version ID: %v`, info.Name, versions, releaseType, modVersion)
 		}
 	}
 	return &file, nil

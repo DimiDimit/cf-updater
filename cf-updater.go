@@ -35,7 +35,7 @@ func run() error {
 	if err := os.Chdir(*dir); err != nil {
 		return errors.Wrap(err, "error entering mods directory")
 	}
-	mods, excls, version, err := modsfile.ParseFile("mods.txt")
+	mods, excls, versions, err := modsfile.ParseFile("mods.txt")
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func run() error {
 			g.Go(func() error {
 				defer barInc(bar)
 				mod := mods[info.ID]
-				file, err := info.LatestDownload(client, version, mod.ReleaseType, mod.ModVersion)
+				file, err := info.LatestDownload(client, versions, mod.ReleaseType, mod.ModVersion)
 				if err != nil {
 					return err
 				}

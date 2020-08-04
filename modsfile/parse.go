@@ -24,7 +24,7 @@ var DefaultReleaseType = twitchapi.ReleaseTypes["release"]
 var fieldSeparator = regexp.MustCompile(`\s+`)
 
 // Parse returns a map of Mods and a slice of exclusions.
-func Parse(file io.Reader) (mods map[int]Mod, excls []*regexp.Regexp, version string, err error) {
+func Parse(file io.Reader) (mods map[int]Mod, excls []*regexp.Regexp, versions []string, err error) {
 	mods = make(map[int]Mod)
 	scanner := bufio.NewScanner(file)
 
@@ -36,10 +36,10 @@ func Parse(file io.Reader) (mods map[int]Mod, excls []*regexp.Regexp, version st
 			fields := fieldSeparator.Split(line, -1)
 			id, err := strconv.Atoi(fields[0])
 			if err != nil {
-				return nil, nil, "", errors.New("invalid syntax: " + line)
+				return nil, nil, nil, errors.New("invalid syntax: " + line)
 			}
 			if _, ok := mods[id]; ok {
-				return nil, nil, "", errors.New("duplicated ID: " + line)
+				return nil, nil, nil, errors.New("duplicated ID: " + line)
 			}
 
 			nfields, modVersion, releaseType := len(fields), -1, DefaultReleaseType
@@ -51,7 +51,7 @@ func Parse(file io.Reader) (mods map[int]Mod, excls []*regexp.Regexp, version st
 				} else {
 					rt, ok := twitchapi.ReleaseTypes[cf]
 					if !ok {
-						return nil, nil, "", errors.New("unknown release type: " + cf)
+						return nil, nil, nil, errors.New("unknown release type: " + cf)
 					}
 					releaseType = rt
 				}
@@ -61,15 +61,17 @@ func Parse(file io.Reader) (mods map[int]Mod, excls []*regexp.Regexp, version st
 		case strings.HasPrefix(line, "exclude "):
 			regex, err := regexp.Compile(strings.TrimSpace(strings.TrimPrefix(line, "exclude")))
 			if err != nil {
-				return nil, nil, "", errors.Wrap(err, "mods file exclude syntax error")
+				return nil, nil, nil, errors.Wrap(err, "mods file exclude syntax error")
 			}
 			excls = append(excls, regex)
 
 		case strings.HasPrefix(line, "version "):
-			if version != "" {
-				return nil, nil, "", errors.New("duplicated version statement: " + line)
+			if versions != nil {
+				return nil, nil, nil, errors.New("duplicated version statement: " + line)
 			}
-			version = strings.TrimSpace(strings.TrimPrefix(line, "version"))
+			for _, version := range fieldSeparator.Split(strings.TrimPrefix(line, "version "), -1) {
+				versions = append(versions, strings.TrimSpace(version))
+			}
 
 		case line == "" || strings.HasPrefix(line, "#"):
 			// Ignore empty lines and comments.
@@ -77,21 +79,21 @@ func Parse(file io.Reader) (mods map[int]Mod, excls []*regexp.Regexp, version st
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, nil, "", errors.Wrap(err, "error reading mods file")
+		return nil, nil, nil, errors.Wrap(err, "error reading mods file")
 	}
 
-	if version == "" {
-		return nil, nil, "", errors.New("version statement missing")
+	if versions == nil {
+		return nil, nil, nil, errors.New("version statement missing")
 	}
 
 	return
 }
 
 // ParseFile opens the file named fileName and calls Parse.
-func ParseFile(fileName string) (map[int]Mod, []*regexp.Regexp, string, error) {
+func ParseFile(fileName string) (map[int]Mod, []*regexp.Regexp, []string, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
-		return nil, nil, "", errors.Wrap(err, "error opening mods file")
+		return nil, nil, nil, errors.Wrap(err, "error opening mods file")
 	}
 	defer file.Close()
 	return Parse(file)
