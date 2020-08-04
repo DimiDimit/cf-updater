@@ -66,6 +66,12 @@ version 1.12.2
 
 `version` is the version of the game that the mods are for and is **required**. Lines starting with `#` are comments.
 
+To use **another modloader like Fabric**, you should specify multiple versions (case-sensitive):
+
+```
+version 1.16.1 Fabric
+```
+
 ### Versions and types
 
 Sometimes you may want to keep a mod on a certain version or use a different release type (e.g. alpha, beta or release). You can do so like this:
