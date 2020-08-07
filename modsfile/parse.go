@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/DimitrodAM/cf-updater/v3/twitchapi"
+	"github.com/DimiDimit/cf-updater/v3/twitchapi"
 	"github.com/pkg/errors"
 )
 

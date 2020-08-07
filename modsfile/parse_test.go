@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/DimitrodAM/cf-updater/v3/twitchapi"
+	"github.com/DimiDimit/cf-updater/v3/twitchapi"
 	"github.com/google/go-cmp/cmp"
 )
 

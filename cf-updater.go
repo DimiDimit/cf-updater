@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/DimitrodAM/cf-updater/v3/modsfile"
-	"github.com/DimitrodAM/cf-updater/v3/twitchapi"
+	"github.com/DimiDimit/cf-updater/v3/modsfile"
+	"github.com/DimiDimit/cf-updater/v3/twitchapi"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/schollz/progressbar/v3"
