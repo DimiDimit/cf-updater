@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DimitrodAM/cf-updater/v3/common"
+	"github.com/DimiDimit/cf-updater/v3/common"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 )
