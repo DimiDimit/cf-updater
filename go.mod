@@ -1,9 +1,9 @@
-module github.com/DimitrodAM/cf-updater/v2
+module github.com/DimiDimit/cf-updater/v2
 
 go 1.14
 
 require (
-	github.com/DimitrodAM/cf-updater v1.1.0
+	github.com/DimiDimit/cf-updater v1.1.0
 	github.com/elliotchance/orderedmap v1.3.0
 	github.com/go-resty/resty/v2 v2.3.0
 	github.com/google/go-cmp v0.5.0
