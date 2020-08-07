@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/DimitrodAM/cf-updater/cfwidget"
-	"github.com/DimitrodAM/cf-updater/modsfile"
+	"github.com/DimiDimit/cf-updater/cfwidget"
+	"github.com/DimiDimit/cf-updater/modsfile"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/schollz/progressbar/v3"

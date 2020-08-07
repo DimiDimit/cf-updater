@@ -1,8 +1,8 @@
 # CurseForge Updater
 
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](http://pkg.go.dev/github.com/DimitrodAM/cf-updater)
-![Test and Lint](https://github.com/DimitrodAM/cf-updater/workflows/Test%20and%20Lint/badge.svg)
-[![Go Report Card](https://goreportcard.com/badge/github.com/DimitrodAM/cf-updater)](https://goreportcard.com/report/github.com/DimitrodAM/cf-updater)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](http://pkg.go.dev/github.com/DimiDimit/cf-updater)
+![Test and Lint](https://github.com/DimiDimit/cf-updater/workflows/Test%20and%20Lint/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/DimiDimit/cf-updater)](https://goreportcard.com/report/github.com/DimiDimit/cf-updater)
 
 A tool to update [CurseForge](https://www.curseforge.com) mods, written in [Go](https://golang.org). Currently only tested with [Minecraft](https://www.curseforge.com/minecraft/mc-mods).
 
@@ -10,7 +10,7 @@ A tool to update [CurseForge](https://www.curseforge.com) mods, written in [Go](
 
 ### Installing on Windows
 
-To install it on Windows, download it from the [Releases](https://www.github.com/DimitrodAM/cf-updater/releases) page and save it into your mods folder (e.g. for Minecraft it's `.minecraft/mods` or `.minecraft/mods/<version>`).
+To install it on Windows, download it from the [Releases](https://www.github.com/DimiDimit/cf-updater/releases) page and save it into your mods folder (e.g. for Minecraft it's `.minecraft/mods` or `.minecraft/mods/<version>`).
 
 ### Installing with `go get`
 
@@ -18,14 +18,14 @@ First, [install Go](https://golang.org/doc/install).
 Then run:
 
 ```sh
-go get github.com/DimitrodAM/cf-updater
+go get github.com/DimiDimit/cf-updater
 ```
 
 ## Setup
 
 **Backup your mods before doing anything else!**
 
-Unfortunately, some setup is first required. You must put URLs to all of your mods in a file called `mods.txt`. This can be tedious if you've got a lot of mods, but I don't see a way around it. If you have an idea, please submit an [issue](https://www.github.com/DimitrodAM/cf-updater/issues) or a [pull request](https://www.github.com/DimitrodAM/cf-updater/pulls)!
+Unfortunately, some setup is first required. You must put URLs to all of your mods in a file called `mods.txt`. This can be tedious if you've got a lot of mods, but I don't see a way around it. If you have an idea, please submit an [issue](https://www.github.com/DimiDimit/cf-updater/issues) or a [pull request](https://www.github.com/DimiDimit/cf-updater/pulls)!
 
 **Treat this file as the single source of mods**, because the tool will **delete** any mods not in the mods file! Files with any other extension (e.g. `.bak`) do not count as mods and will **not** be deleted.
 

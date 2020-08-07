@@ -1,4 +1,4 @@
-module github.com/DimitrodAM/cf-updater
+module github.com/DimiDimit/cf-updater
 
 go 1.14
 
