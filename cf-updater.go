@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/DimiDimit/cf-updater/cfwidget"
 	"github.com/DimiDimit/cf-updater/modsfile"
@@ -22,15 +23,20 @@ var empty struct{}
 
 func run() error {
 	dir := flag.String("dir", ".", "The directory where the mods are located")
+	modsfileLocF := flag.String("modsfile", "%dir/mods.txt", "The mods file location, use %dir/ to make it relative to the mods directory")
 	flag.Parse()
+
+	modsfileLoc := *modsfileLocF
+	if strings.HasPrefix(modsfileLoc, "%dir/") {
+		modsfileLoc = filepath.Join(*dir, strings.TrimPrefix(modsfileLoc, "%dir/"))
+	}
+	urls, excls, version, err := modsfile.ParseFile(Prefix, modsfileLoc)
+	if err != nil {
+		return err
+	}
 
 	if err := os.Chdir(*dir); err != nil {
 		return errors.Wrap(err, "error entering mods directory")
-	}
-
-	urls, excls, version, err := modsfile.ParseFile(Prefix, "mods.txt")
-	if err != nil {
-		return err
 	}
 
 	fmt.Println("… Fetching info about the mods...")
