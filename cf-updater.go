@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/DimiDimit/cf-updater/v3/modsfile"
@@ -29,13 +30,16 @@ type download struct {
 
 func run() error {
 	dir := flag.String("dir", ".", "The directory where the mods are located")
+	modsfileLocF := flag.String("modsfile", "%dir/mods.txt", "The mods file location, use %dir/ to make it relative to the mods directory")
 	showUpToDate := flag.Bool("u2d", false, "List up to date mods, useful for debugging")
 	hideKeptBack := flag.Bool("hidekb", false, "Hide mods which are kept back from upgrading")
 	flag.Parse()
-	if err := os.Chdir(*dir); err != nil {
-		return errors.Wrap(err, "error entering mods directory")
+
+	modsfileLoc := *modsfileLocF
+	if strings.HasPrefix(modsfileLoc, "%dir/") {
+		modsfileLoc = filepath.Join(*dir, strings.TrimPrefix(modsfileLoc, "%dir/"))
 	}
-	mods, excls, version, err := modsfile.ParseFile("mods.txt")
+	mods, excls, version, err := modsfile.ParseFile(modsfileLoc)
 	if err != nil {
 		return err
 	}
@@ -46,6 +50,10 @@ func run() error {
 			ids[i] = k
 			i++
 		}
+	}
+
+	if err := os.Chdir(*dir); err != nil {
+		return errors.Wrap(err, "error entering mods directory")
 	}
 
 	fmt.Println("… Fetching info about the mods...")
