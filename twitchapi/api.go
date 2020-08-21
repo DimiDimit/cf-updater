@@ -153,7 +153,7 @@ func GetModInfo(client *resty.Client, modID int) (*ModInfo, error) {
 		SetResult(ModInfo{}).
 		Get(fmt.Sprintf("https://%v/api/v2/addon/%v", Endpoint, modID))
 	if err != nil {
-		return nil, errors.Wrap(err, "error fetching mod info for "+string(modID))
+		return nil, errors.Wrap(err, "error fetching mod info for "+fmt.Sprint(modID))
 	}
 	return info.Result().(*ModInfo), nil
 }
