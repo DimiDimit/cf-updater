@@ -23,7 +23,7 @@ func findLatestMatchingFile(files []File, versions []string,
 	ver:
 		for _, ver := range file.GameVersion {
 			for _, version := range versions {
-				if ver == version {
+				if ver == version || strings.Contains(file.DisplayName, version) {
 					seenVersions++
 					if seenVersions >= versionsn {
 						break ver
