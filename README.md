@@ -71,7 +71,3 @@ As stated above, **mods that aren't specified or `exclude`d will be deleted**!
 Now that the preparations are complete, simply run `cf-updater` in a terminal in the mods folder or double-click the executable. For more usage options, run `cf-updater -h`.
 
 If you want to use an option every time without having to open a terminal on Windows, you should create a `.cmd` file. On Linux, you should create a shell script.
-
-## Why does it delete all mods not in the mods file?
-
-That's because it's impossible to tell if you've got an older version of the mod that should be deleted or if that is just another mod. And because Forge doesn't allow multiple versions of the same mod at the same time, the old one must be deleted. So in the end, this is the only possible solution (again, suggestions are welcome!).
