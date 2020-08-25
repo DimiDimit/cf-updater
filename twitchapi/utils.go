@@ -15,23 +15,23 @@ type files struct {
 
 func findLatestMatchingFile(files []File, versions []string,
 	releaseType int, modVersion int) (tfile File, seen bool) {
-	versionn := len(versions)
 	var latestTime time.Time
+file:
 	for _, file := range files {
-		seenVersions := 0
-	ver:
-		for _, ver := range file.GameVersion {
-			for _, version := range versions {
-				if ver == version || strings.Contains(file.DisplayName, version) {
-					seenVersions++
-					if seenVersions >= versionn {
-						break ver
-					}
+		for _, version := range versions {
+			matched := strings.Contains(strings.ToLower(file.DisplayName), strings.ToLower(version))
+			for _, ver := range file.GameVersion {
+				if ver == version {
+					matched = true
+					break
 				}
 			}
+			if !matched {
+				continue file
+			}
 		}
-		if seenVersions >= versionn &&
-			latestTime.Before(file.FileDate) &&
+
+		if latestTime.Before(file.FileDate) &&
 			(releaseType == -1 || releaseType >= file.ReleaseType) &&
 			(modVersion == -1 || modVersion == file.ID) {
 			seen = true
