@@ -1,3 +1,12 @@
+# Important!
+**Considerably bad UX has befallen this project!** If you're playing Minecraft, use `mcmodmgr` _(under development, soon to be on GitHub)_ instead.
+
+### History
+I started this project with the goal of making an easy-to-use mod updater. But after switching to the Twitch API in [#1](https://github.com/DimiDimit/cf-updater/issues/1), which didn't have searching by slugs, I had to make a compromise and make users specify IDs, because my implementation was inflexible. As other features got added, I just threw them together *somehow.* Soon, you had to copy IDs, remember arguments and leave tons of comments—it became a mess! Now, with a clear vision, strict rules and going in the right direction where I had previously taken a wrong turn (e.g. choosing Rust instead of Go (not hating on Go, I just found I like Rust more), using TOML rather than making my own parser, etc.) I'm planning something much bigger, better, and focused (on Minecraft).
+
+### The future of this project
+OK, so what about `cf-updater`? Well, unlike `mcmodmgr`, it's *supposed to* work for any CurseForge game, not just Minecraft, and it still works (I think), so I'll continue maintaining it, fixing bugs and adding minor features, at least for now. I'm not planning on doing any serious updates though, so if you're willing to do anything big, instead of submitting a pull request you might as well fork it, tell me in an issue/discussion and I'll link to it here.
+
 # CurseForge Updater
 
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://pkg.go.dev/mod/github.com/DimiDimit/cf-updater/v3)
